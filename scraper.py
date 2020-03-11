@@ -12,13 +12,14 @@ page_tree = BeautifulSoup(page_response.text, 'html.parser')
 
 opinions = page_tree.select('li.review-box')
 opinion = opinions[0]
-opinion_id = opinion['data-entry-id']
-author = opinion.select('div.reviewer-name-line')
-recommendaion = opinion.select('div.product-review-summary')
-stars = opinion.select('span.review-score-count')
-purchased = opinion.select('div.product-review-pz')
-useful = opinion.select('button.vote-yes')[0]['data-total-vote']
-useless = opinion.select('button.vote-no')[0]['data-total-vote']
+opinion_id = opinion['data-entry-id'].pop(0).string
+author = opinion.select('div.reviewer-name-line').pop(0).string
+recommendaion = opinion.select('div.product-review-summary').pop(0).string
+stars = opinion.select('span.review-score-count').pop(0).string
+purchased = opinion.select('div.product-review-pz').pop(0).string
+useful = opinion.select('button.vote-yes').pop(0)['data-total-vote']
+useless = opinion.select('button.vote-no').pop(0)['data-total-vote']
+content = opinion.select('p.product-review-body').pop(0).get_text()
 
 print(useless)
 # - opinia: li.review-box
