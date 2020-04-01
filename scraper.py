@@ -3,77 +3,61 @@ import requests
 from bs4 import BeautifulSoup
 import pprint
 import json
+
+#funkcja do ekstrakcji składowych opini
+def extract_feature(opinion, selector,attribute = None) :
+    try:
+        if not attribute:
+            return opinion.select(selector).pop().get_text().strip()
+        else:
+            return opinion.select(selector).pop()[attribute]
+    except IndexError:
+        return None
+
+selectors = {
+    'author':['div.reviewer-name-line'],
+    'recommendation':['div.product-review-summary'],
+    'stars':['span.review-score-count'],
+    'content':['p.product-review-body'],
+    'pros':['div.pros-cell > ul'],
+    'cons':['div.cons-cell > ul'],
+    'useful':['button.vote-yes','data-total-vote'],
+    'useless':['button.vote-no','data-total-vote'],
+    'purchased':['div.product-review-pz'],
+    'purchase_date':['span.review-time > time:nth-of-type(1)','datetime'],
+    'review_date':['span.review-time > time:nth-of-type(1)','datetime']   
+}
+
 #adres URL strony z opiniami
 #url = 'https://www.ceneo.pl/82304782#tab=reviews'
 #76891701
 url_prefix = 'https://www.ceneo.pl/'
-product_id = input('Podaj kod produktu')
+product_id = input('Podaj kod produktu: ')
 url_postfix = '#tab=reviews'
-url = url_prefix+'/'+url_postfix
+url = url_prefix+'/'+product_id+url_postfix
 #pobranie kodu HTML strony z adresu URL
-#page_response = requests.get(url)
-#page_tree = BeautifulSoup(page_response.text, 'html.parser')
-while url is not None:
-        page_response = requests.get(url)
-        page_tree = BeautifulSoup(page_response.text, 'html.parser')
-#Wybranie z kodu strony fragmentów odpowiadających poszczególnym opiniom
 opinions_list = []
+while url is not None:
+    page_response = requests.get(url)
+    page_tree = BeautifulSoup(page_response.text, 'html.parser')
+    opinions = page_tree.select('li.js_product-review')
 
-opinions = page_tree.select('li.js_product-review')
 #opinion = opinions[0]
-for opinion in opinions:
-    opinion_id = opinion["data-entry-id"]
-    author = opinion.select('div.reviewer-name-line').pop(0).string
-    try: 
-        recommendation = opinion.select('div.product-review-summary').pop(0).string
-    except IndexError:
-        recommendation = None
-    stars = opinion.select('span.review-score-count').pop(0).string
-    try:
-        purchased = opinion.select('div.product-review-pz').pop(0).string
-    except IndexError:
-        purchased = None
-    useful = opinion.select('button.vote-yes').pop(0)['data-total-vote']
-    useless = opinion.select('button.vote-no').pop(0)['data-total-vote']
-    content = opinion.select('p.product-review-body').pop(0).get_text()
-    try:
-        cons = opinion.select('div.cons-cell > ul').pop(0).get_text
-    except IndexError:
-        cons = None
-    try:
-        pros = opinion.select('div.pros-cell > ul').pop(0).get_text
-    except IndexError:
-        pros = None
-    date = opinion.select('span.review-time > time')
-    review_date = date.pop(0)['datetime']
-    try:
-        purchase_date = date.pop(0)['datetime']
-    except IndexError:
-        purchase_date = None
+    for opinion in opinions:
+        features = {key:extract_feature(opinion, *args)
+                    for key, args in selectors.items()}
+        features['opinion_id'] = int(opinion['data-entry-id'])
+        features['purchased']=True if features['purchased'] == 'Opinia potwierdzona zakupem'else False
+        opinions_list.append(features)
 
-    #print(opinion_id,author,recommendation,stars,purchased,useful,useless,review_date,purchase_date)
-    opinions_dict = {
-        'opinion_id':opinion_id,
-        'author':author,
-        'recommendation':recommendation,
-        'stars':stars,
-        'content':content,
-        'pros':pros,
-        'cons':cons,
-        'useful':useful,
-        'useless':useless,
-        'purchased':purchased,
-        'purchase_date':purchase_date,
-        'review_date':review_date    
-    }
-    opinions_list.append(opinions_dict)
+    
     try:
         url =url_prefix+page_tree.select('a.pagination_next').pop()['href']
     except IndexError:
         url = None
 
-filename = product_id+'.json'
-with open ('opinions.json','w') as fp:
-    json.dump(opinions_list, fp, ensure_ascii=False)
+
+with open (product_id+".json",'w',encoding="utf-8") as fp:
+    json.dump(opinions_list, fp, ensure_ascii=False, separators=(",",": "),indent=4)
 
 
