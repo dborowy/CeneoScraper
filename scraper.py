@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import pprint
 import json
+import re
 
 #funkcja do ekstrakcji składowych opini
 def extract_feature(opinion, selector,attribute = None) :
@@ -13,6 +14,10 @@ def extract_feature(opinion, selector,attribute = None) :
             return opinion.select(selector).pop()[attribute]
     except IndexError:
         return None
+
+def remove_whitespace(text):
+    if text!=None:
+        return re.sub("\n|\r", ". ", str(text))
 
 selectors = {
     'author':['div.reviewer-name-line'],
@@ -47,7 +52,12 @@ while url is not None:
         features = {key:extract_feature(opinion, *args)
                     for key, args in selectors.items()}
         features['opinion_id'] = int(opinion['data-entry-id'])
-        features['purchased']=True if features['purchased'] == 'Opinia potwierdzona zakupem'else False
+        features['purchased'] = True if features['purchased'] == 'Opinia potwierdzona zakupem'else False
+        features['useful'] = int(features['useful'])
+        features['useless'] = int(features['useless'])
+        features['pros'] = remove_whitespace(features['pros'])
+        features['cons'] = remove_whitespace(features['cons'])
+        
         opinions_list.append(features)
 
     
@@ -57,7 +67,7 @@ while url is not None:
         url = None
 
 
-with open (product_id+".json",'w',encoding="utf-8") as fp:
+with open ('opinions/'+product_id+".json",'w',encoding="utf-8") as fp:
     json.dump(opinions_list, fp, ensure_ascii=False, separators=(",",": "),indent=4)
 
 
