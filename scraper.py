@@ -62,7 +62,7 @@ while url is not None:
 
     
     try:
-        url =url_prefix+page_tree.select('a.pagination_next').pop()['href']
+        url =url_prefix+page_tree.select("a.pagination__next").pop()["href"]
     except IndexError:
         url = None
 
