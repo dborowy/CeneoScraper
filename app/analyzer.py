@@ -2,10 +2,10 @@ import os
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
-print(os.listdir('./opinions'))
+print(os.listdir('./app/opinions'))
 
 product_id = input('Podaj kod produktu: ')
-opinions = pd.read_json('opinions/'+product_id+'.json')
+opinions = pd.read_json('app/opinions/'+product_id+'.json')
 opinions = opinions.set_index('opinion_id')
 
 #histogram częstości występowania poszczególnej oceny
@@ -32,8 +32,8 @@ pros = opinions['pros'].count()
 cons = opinions['cons'].count()
 purchased = opinions['purchased'].sum()
 
-print(average_score,pros,cons,purchased)
+#print(average_score,pros,cons,purchased)
 
 stars_purchased = pd.crosstab(opinions['stars'],opinions['purchased'])
 
-print(stars_purchased)
+#print(stars_purchased)
