@@ -11,16 +11,20 @@ Markdown(app)
 def index():
     return render_template('index.html')
 
-@app.route('/extract')
+@app.route('/extract', methods = ['POST','GET'])
 def extract():
-    if request.method == 'POST':
-        return 'Przesłano formularz'
     form = ProductForm()
+    if form.validate_on_submit():
+        return 'Przesłano formularz'
     return render_template('extract.html', form=form)
 
 @app.route('/products')
 def products():
     pass
+
+@app.route('/product/<product_id')
+def product():
+    
 
 @app.route('/about')
 def about():
