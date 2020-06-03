@@ -1,0 +1,6 @@
+{% extends 'layout.html' %}
+{% block body %}
+    {% for table in tables %}
+        {{ table|safe }}
+    {% endfor %}
+{% endblock %}
